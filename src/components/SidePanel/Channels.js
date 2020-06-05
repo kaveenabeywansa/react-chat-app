@@ -1,39 +1,39 @@
-import React from 'react';
-import firebase from '../../firebase';
-import { connect } from 'react-redux';
-import { setCurrentChannel } from '../../actions';
-import { Menu, Icon, Modal, Form, Input, Button } from 'semantic-ui-react';
+import React from "react";
+import firebase from "../../firebase";
+import { connect } from "react-redux";
+import { setCurrentChannel, setPrivateChannel } from "../../actions";
+import { Menu, Icon, Modal, Form, Input, Button } from "semantic-ui-react";
 
 class Channels extends React.Component {
     state = {
-        activeChannel: '',
+        activeChannel: "",
         user: this.props.currentUser,
         channels: [],
-        channelName: '',
-        channelDetails: '',
-        channelsRef: firebase.database().ref('channels'),
+        channelName: "",
+        channelDetails: "",
+        channelsRef: firebase.database().ref("channels"),
         modal: false,
-        firstLoad: true
-    }
+        firstLoad: true,
+    };
 
     openModal = () => this.setState({ modal: true });
 
     closeModal = () => this.setState({ modal: false });
 
-    handleChange = event => {
+    handleChange = (event) => {
         this.setState({ [event.target.name]: event.target.value });
     };
 
-    handleSubmit = event => {
+    handleSubmit = (event) => {
         event.preventDefault();
         if (this.isFormValid(this.state)) {
             this.addChannel();
         }
     };
 
-    displayChannels = channels =>
+    displayChannels = (channels) =>
         channels.length > 0 &&
-        channels.map(channel => (
+        channels.map((channel) => (
             <Menu.Item
                 key={channel.id}
                 onClick={() => this.changeChannel(channel)}
@@ -43,7 +43,7 @@ class Channels extends React.Component {
             >
                 # {channel.name}
             </Menu.Item>
-        ))
+        ));
 
     isFormValid = ({ channelName, channelDetails }) => channelName && channelDetails;
 
@@ -58,26 +58,26 @@ class Channels extends React.Component {
             details: channelDetails,
             createdBy: {
                 name: user.displayName,
-                avatar: user.photoURL
-            }
+                avatar: user.photoURL,
+            },
         };
 
         channelsRef
             .child(key)
             .update(newChannel)
             .then(() => {
-                this.setState({ channelName: '', channelDetails: '' });
+                this.setState({ channelName: "", channelDetails: "" });
                 this.closeModal();
-                console.log('channel added');
+                console.log("channel added");
             })
-            .catch(err => {
+            .catch((err) => {
                 console.error(err);
-            })
+            });
     };
 
     componentDidMount() {
         this.addListners();
-    };
+    }
 
     componentWillUnmount() {
         this.removeListners();
@@ -86,15 +86,15 @@ class Channels extends React.Component {
     addListners = () => {
         let loadedChannels = [];
 
-        this.state.channelsRef.on('child_added', snap => {
+        this.state.channelsRef.on("child_added", (snap) => {
             loadedChannels.push(snap.val());
             this.setState({ channels: loadedChannels }, () => this.setFirstChannel());
-        })
+        });
     };
 
     removeListners = () => {
         this.state.channelsRef.off();
-    }
+    };
 
     setFirstChannel = () => {
         const firstchannel = this.state.channels[0];
@@ -103,26 +103,27 @@ class Channels extends React.Component {
             this.setActiveChannel(firstchannel);
         }
         this.setState({ firstLoad: false });
-    }
+    };
 
-    changeChannel = channel => {
+    changeChannel = (channel) => {
         this.setActiveChannel(channel);
         this.props.setCurrentChannel(channel);
-    }
+        this.props.setPrivateChannel(false);
+    };
 
-    setActiveChannel = channel => {
+    setActiveChannel = (channel) => {
         this.setState({ activeChannel: channel.id });
-    }
+    };
 
     render() {
         const { channels, modal } = this.state;
         return (
             <React.Fragment>
-                <Menu.Menu style={{ paddingBottom: '2em' }}>
+                <Menu.Menu className="menu">
                     <Menu.Item>
                         <span>
                             <Icon name="exchange" /> CHANNELS
-                        </span> {' '}
+                        </span>{" "}
                         ({channels.length}) <Icon name="add" onClick={this.openModal} />
                     </Menu.Item>
                     {this.displayChannels(channels)}
@@ -134,21 +135,11 @@ class Channels extends React.Component {
                     <Modal.Content>
                         <Form onSubmit={this.handleSubmit}>
                             <Form.Field>
-                                <Input
-                                    fluid
-                                    label="Name of Channel"
-                                    name="channelName"
-                                    onChange={this.handleChange}
-                                />
+                                <Input fluid label="Name of Channel" name="channelName" onChange={this.handleChange} />
                             </Form.Field>
 
                             <Form.Field>
-                                <Input
-                                    fluid
-                                    label="About the Channel"
-                                    name="channelDetails"
-                                    onChange={this.handleChange}
-                                />
+                                <Input fluid label="About the Channel" name="channelDetails" onChange={this.handleChange} />
                             </Form.Field>
                         </Form>
                     </Modal.Content>
@@ -156,10 +147,10 @@ class Channels extends React.Component {
                     <Modal.Actions>
                         <Button color="green" inverted onClick={this.handleSubmit}>
                             <Icon name="checkmark" /> Add
-                    </Button>
+                        </Button>
                         <Button color="red" inverted onClick={this.closeModal}>
                             <Icon name="remove" /> Cancel
-                    </Button>
+                        </Button>
                     </Modal.Actions>
                 </Modal>
             </React.Fragment>
@@ -167,4 +158,4 @@ class Channels extends React.Component {
     }
 }
 
-export default connect(null, { setCurrentChannel })(Channels);
+export default connect(null, { setCurrentChannel, setPrivateChannel })(Channels);
